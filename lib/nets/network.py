@@ -36,6 +36,8 @@ class Network(object):
     self._score_summaries = {}
     self._train_summaries = []
     self._event_summaries = {}
+    self._variables_to_fix = {}
+    self._variables_to_check = {}
 
   def _add_image_summary(self, image, boxes):
     # add back mean
@@ -207,6 +209,7 @@ class Network(object):
   def _smooth_l1_loss(self, bbox_pred, bbox_targets, bbox_inside_weights, bbox_outside_weights, sigma=1.0, dim=[1]):
     sigma_2 = sigma ** 2
     box_diff = bbox_pred - bbox_targets
+    # self._variables_to_check["box_diff"] = tf.reduce_mean(tf.reduce_sum(tf.pow(box_diff, 2), axis=dim))
     in_box_diff = bbox_inside_weights * box_diff
     abs_in_box_diff = tf.abs(in_box_diff)
     smoothL1_sign = tf.stop_gradient(tf.to_float(tf.less(abs_in_box_diff, 1. / sigma_2)))
@@ -242,7 +245,6 @@ class Network(object):
       # RCNN, class loss
       cls_score = self._predictions["cls_score"]
       label = tf.reshape(self._proposal_targets["labels"], [-1])
-
       cross_entropy = tf.reduce_mean(
         tf.nn.sparse_softmax_cross_entropy_with_logits(
           logits=tf.reshape(cls_score, [-1, self._num_classes]), labels=label))
@@ -337,6 +339,12 @@ class Network(object):
 
     return layers_to_output
 
+  def get_variables_to_restore(self, variables, var_keep_dic):
+    raise NotImplementedError
+
+  def fix_variables(self, sess, pretrained_model):
+    raise NotImplementedError
+
   # Extract the head feature maps, for example for vgg16 it is conv5_3
   # only useful during testing mode
   def extract_head(self, sess, image):
@@ -362,29 +370,44 @@ class Network(object):
 
     return summary
 
-  def train_step(self, sess, blobs, train_op):
+  def train_step(self, sess, blobs, train_op, print_debug=False):
     feed_dict = {self._image: blobs['data'], self._im_info: blobs['im_info'],
                  self._gt_boxes: blobs['gt_boxes']}
-    rpn_loss_cls, rpn_loss_box, loss_cls, loss_box, loss, _ = sess.run([self._losses["rpn_cross_entropy"],
+    dmode  = sess.run([self._losses["rpn_cross_entropy"],
                                                                         self._losses['rpn_loss_box'],
                                                                         self._losses['cross_entropy'],
                                                                         self._losses['loss_box'],
                                                                         self._losses['total_loss'],
-                                                                        train_op],
-                                                                       feed_dict=feed_dict)
+                                                                        train_op] + [dmode for dmode in self._variables_to_check.values()],
+                                                                      feed_dict=feed_dict)
+    
+    rpn_loss_cls, rpn_loss_box, loss_cls, loss_box, loss, _ = dmode[:6]
+    
+    if print_debug:
+        print("===============================")
+        print("Debug Mode")
+        i = 0
+        for values in self._variables_to_check.keys():
+            print(str(values) + ": " + str(dmode[6+i]))
+            i = i + 1
+        print("===============================")
     return rpn_loss_cls, rpn_loss_box, loss_cls, loss_box, loss
 
   def train_step_with_summary(self, sess, blobs, train_op):
     feed_dict = {self._image: blobs['data'], self._im_info: blobs['im_info'],
                  self._gt_boxes: blobs['gt_boxes']}
-    rpn_loss_cls, rpn_loss_box, loss_cls, loss_box, loss, summary, _ = sess.run([self._losses["rpn_cross_entropy"],
+    rpn_loss_cls, rpn_loss_box, loss_cls, loss_box, loss, summary,_  = sess.run([self._losses["rpn_cross_entropy"],
                                                                                  self._losses['rpn_loss_box'],
                                                                                  self._losses['cross_entropy'],
                                                                                  self._losses['loss_box'],
                                                                                  self._losses['total_loss'],
                                                                                  self._summary_op,
-                                                                                 train_op],
+                                                                                 train_op] + [dmode for dmode in self._variables_to_check.values()],
                                                                                 feed_dict=feed_dict)
+    print("===============================")
+    print("Debug Mode")
+    print(str(loss_box))
+    print("===============================")
     return rpn_loss_cls, rpn_loss_box, loss_cls, loss_box, loss, summary
 
   def train_step_no_return(self, sess, blobs, train_op):
