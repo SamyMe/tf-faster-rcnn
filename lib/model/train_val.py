@@ -42,6 +42,7 @@ class SolverWrapper(object):
       os.makedirs(self.tbvaldir)
     self.pretrained_model = pretrained_model
 
+
   def snapshot(self, sess, iter):
     net = self.net
 
@@ -103,8 +104,18 @@ class SolverWrapper(object):
       layers = self.net.create_architecture(sess, 'TRAIN', self.imdb.num_classes, tag='default',
                                             anchor_scales=cfg.ANCHOR_SCALES,
                                             anchor_ratios=cfg.ANCHOR_RATIOS)
+
+
+      loss_mode = { 
+              "bbox" : layers['loss_box'],
+              "cls" : layers['cross_entropy'],
+              "fc" : layers['cross_entropy'] + layers['loss_box'],
+              "all" : layers['total_loss'],
+              }
+
       # Define the loss
-      loss = layers['total_loss']
+      loss = loss_mode[cfg.TRAIN.MODE]
+
       # Set learning rate and momentum
       lr = tf.Variable(cfg.TRAIN.LEARNING_RATE, trainable=False)
       momentum = cfg.TRAIN.MOMENTUM
@@ -249,6 +260,14 @@ class SolverWrapper(object):
         else:
           sess.run(tf.assign(lr, cfg.TRAIN.LEARNING_RATE))
 
+
+    # Init losses
+    batch_total_loss = 0
+    batch_rpn_loss_cls = 0
+    batch_rpn_loss_box = 0
+    batch_loss_cls = 0
+    batch_loss_box = 0
+
     timer = Timer()
     iter = last_snapshot_iter + 1
     last_summary_time = time.time()
@@ -276,16 +295,31 @@ class SolverWrapper(object):
         last_summary_time = now
       else:
         # Compute the graph without summary
+        print_debug = False
+        if iter % (cfg.TRAIN.DISPLAY) == 0 and cfg.TRAIN.DISPLAY_INFO == 1:
+            print_debug = True
         rpn_loss_cls, rpn_loss_box, loss_cls, loss_box, total_loss = \
-          self.net.train_step(sess, blobs, train_op)
+              self.net.train_step(sess, blobs, train_op, print_debug=print_debug)
       timer.toc()
+
+      batch_total_loss += total_loss
+      batch_rpn_loss_cls += rpn_loss_cls
+      batch_rpn_loss_box += rpn_loss_box
+      batch_loss_cls += loss_cls
+      batch_loss_box += loss_box
 
       # Display training information
       if iter % (cfg.TRAIN.DISPLAY) == 0:
         print('iter: %d / %d, total loss: %.6f\n >>> rpn_loss_cls: %.6f\n '
               '>>> rpn_loss_box: %.6f\n >>> loss_cls: %.6f\n >>> loss_box: %.6f\n >>> lr: %f' % \
-              (iter, max_iters, total_loss, rpn_loss_cls, rpn_loss_box, loss_cls, loss_box, lr.eval()))
+              (iter, max_iters, batch_total_loss, batch_rpn_loss_cls, batch_rpn_loss_box, batch_loss_cls, batch_loss_box, lr.eval()))
         print('speed: {:.3f}s / iter'.format(timer.average_time))
+
+        batch_total_loss = 0
+        batch_rpn_loss_cls = 0
+        batch_rpn_loss_box = 0
+        batch_loss_cls = 0
+        batch_loss_box = 0
 
       if iter % cfg.TRAIN.SNAPSHOT_ITERS == 0:
         last_snapshot_iter = iter
