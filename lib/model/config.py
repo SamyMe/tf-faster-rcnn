@@ -14,12 +14,24 @@ __C = edict()
 cfg = __C
 
 #
+# HDF5 File
+#
+
+__C.DATA_FILE = '/home/blur/Documents/data/train_1400_faster_init.hdf5'
+
+#
 # Training options
 #
 __C.TRAIN = edict()
 
+# Could be : bbox, cls, fc or all
+__C.TRAIN.MODE = "all"
+
+__C.TRAIN.NB_EXAMPLE = 10
+
 # Initial learning rate
-__C.TRAIN.LEARNING_RATE = 0.001
+# __C.TRAIN.LEARNING_RATE = 0.001
+__C.TRAIN.LEARNING_RATE = 0.0005
 
 # Momentum
 __C.TRAIN.MOMENTUM = 0.9
@@ -36,8 +48,12 @@ __C.TRAIN.STEPSIZE = 30000
 # Iteration intervals for showing the loss during training, on command line interface
 __C.TRAIN.DISPLAY = 10
 
+# Display debug info
+__C.TRAIN.DISPLAY_INFO = 0
+
 # Whether to double the learning rate for bias
-__C.TRAIN.DOUBLE_BIAS = True
+# __C.TRAIN.DOUBLE_BIAS = True
+__C.TRAIN.DOUBLE_BIAS = False
 
 # Whether to initialize the weights with truncated normal distribution 
 __C.TRAIN.TRUNCATED = False
@@ -56,44 +72,53 @@ __C.TRAIN.ASPECT_GROUPING = False
 __C.TRAIN.SNAPSHOT_KEPT = 3
 
 # The time interval for saving tensorflow summaries
-__C.TRAIN.SUMMARY_INTERVAL = 180
+__C.TRAIN.SUMMARY_INTERVAL = 18000
 
 # Scale to use during training (can NOT list multiple scales)
 # The scale is the pixel size of an image's shortest side
 __C.TRAIN.SCALES = (600,)
 
 # Max pixel size of the longest side of a scaled input image
-__C.TRAIN.MAX_SIZE = 1000
+# __C.TRAIN.MAX_SIZE = 1000
+__C.TRAIN.MAX_SIZE = 3072
 
 # Images to use per minibatch
-__C.TRAIN.IMS_PER_BATCH = 2
+__C.TRAIN.IMS_PER_BATCH = 1
 
 # Minibatch size (number of regions of interest [ROIs])
-__C.TRAIN.BATCH_SIZE = 128
+__C.TRAIN.BATCH_SIZE = 256
 
 # Fraction of minibatch that is labeled foreground (i.e. class > 0)
-__C.TRAIN.FG_FRACTION = 0.25
+
+# __C.TRAIN.FG_FRACTION = 0.25
+__C.TRAIN.FG_FRACTION = 0.6
 
 # Overlap threshold for a ROI to be considered foreground (if >= FG_THRESH)
-__C.TRAIN.FG_THRESH = 0.5
+# __C.TRAIN.FG_THRESH = 0.5
+__C.TRAIN.FG_THRESH = 0.01
 
 # Overlap threshold for a ROI to be considered background (class = 0 if
 # overlap in [LO, HI))
-__C.TRAIN.BG_THRESH_HI = 0.5
-__C.TRAIN.BG_THRESH_LO = 0.1
+
+# __C.TRAIN.BG_THRESH_HI = 0.5
+# __C.TRAIN.BG_THRESH_LO = 0.1
+
+__C.TRAIN.BG_THRESH_HI = 0.0001
+__C.TRAIN.BG_THRESH_LO = 0.0
 
 # Use horizontally-flipped images during training?
-__C.TRAIN.USE_FLIPPED = True
+# __C.TRAIN.USE_FLIPPED = True 
+__C.TRAIN.USE_FLIPPED = False
 
 # Train bounding-box regressors
 __C.TRAIN.BBOX_REG = True
 
 # Overlap required between a ROI and ground-truth box in order for that ROI to
 # be used as a bounding-box regression training example
-__C.TRAIN.BBOX_THRESH = 0.5
+__C.TRAIN.BBOX_THRESH = 0.05
 
 # Iterations between snapshots
-__C.TRAIN.SNAPSHOT_ITERS = 5000
+__C.TRAIN.SNAPSHOT_ITERS = 100
 
 # solver.prototxt specifies the snapshot path prefix, this adds an optional
 # infix to yield the path: <prefix>[_<infix>]_iters_XYZ.caffemodel
@@ -124,9 +149,13 @@ __C.TRAIN.PROPOSAL_METHOD = 'gt'
 # Use RPN to detect objects
 __C.TRAIN.HAS_RPN = False
 # IOU >= thresh: positive example
-__C.TRAIN.RPN_POSITIVE_OVERLAP = 0.7
+# __C.TRAIN.RPN_POSITIVE_OVERLAP = 0.7
+__C.TRAIN.RPN_POSITIVE_OVERLAP = 0.001
+
 # IOU < thresh: negative example
-__C.TRAIN.RPN_NEGATIVE_OVERLAP = 0.3
+# __C.TRAIN.RPN_NEGATIVE_OVERLAP = 0.3
+__C.TRAIN.RPN_NEGATIVE_OVERLAP = 0.0001
+
 # If an anchor statisfied by positive and negative conditions set to negative
 __C.TRAIN.RPN_CLOBBER_POSITIVES = False
 # Max number of foreground examples
@@ -138,7 +167,8 @@ __C.TRAIN.RPN_NMS_THRESH = 0.7
 # Number of top scoring boxes to keep before apply NMS to RPN proposals
 __C.TRAIN.RPN_PRE_NMS_TOP_N = 12000
 # Number of top scoring boxes to keep after applying NMS to RPN proposals
-__C.TRAIN.RPN_POST_NMS_TOP_N = 2000
+# __C.TRAIN.RPN_POST_NMS_TOP_N = 2000
+__C.TRAIN.RPN_POST_NMS_TOP_N = 4000
 # Proposal height and width both need to be greater than RPN_MIN_SIZE (at orig image scale)
 # __C.TRAIN.RPN_MIN_SIZE = 16
 # Deprecated (outside weights)
@@ -156,12 +186,16 @@ __C.TRAIN.USE_ALL_GT = True
 #
 __C.TEST = edict()
 
+# Number of images te test on
+__C.TEST.NB_EXAMPLE = 256
+
 # Scale to use during testing (can NOT list multiple scales)
 # The scale is the pixel size of an image's shortest side
 __C.TEST.SCALES = (600,)
 
 # Max pixel size of the longest side of a scaled input image
-__C.TEST.MAX_SIZE = 1000
+# __C.TEST.MAX_SIZE = 1000
+__C.TEST.MAX_SIZE = 3072 
 
 # Overlap threshold used for non-maximum suppression (suppress boxes with
 # IoU >= this threshold)
@@ -183,10 +217,12 @@ __C.TEST.PROPOSAL_METHOD = 'gt'
 ## NMS threshold used on RPN proposals
 __C.TEST.RPN_NMS_THRESH = 0.7
 ## Number of top scoring boxes to keep before apply NMS to RPN proposals
-__C.TEST.RPN_PRE_NMS_TOP_N = 6000
+# __C.TEST.RPN_PRE_NMS_TOP_N = 6000
+__C.TEST.RPN_PRE_NMS_TOP_N = 16000
 
 ## Number of top scoring boxes to keep after applying NMS to RPN proposals
-__C.TEST.RPN_POST_NMS_TOP_N = 300
+# __C.TEST.RPN_POST_NMS_TOP_N = 300
+__C.TEST.RPN_POST_NMS_TOP_N = 2000
 
 # Proposal height and width both need to be greater than RPN_MIN_SIZE (at orig image scale)
 # __C.TEST.RPN_MIN_SIZE = 16
@@ -264,7 +300,7 @@ __C.POOLING_MODE = 'crop'
 __C.POOLING_SIZE = 7
 
 # Anchor scales for RPN
-__C.ANCHOR_SCALES = [8,16,32]
+__C.ANCHOR_SCALES = [2, 4, 8, 16, 32, 128]
 
 # Anchor ratios for RPN
 __C.ANCHOR_RATIOS = [0.5,1,2]
