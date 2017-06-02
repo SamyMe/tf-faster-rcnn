@@ -25,7 +25,6 @@ def proposal_target_layer(rpn_rois, rpn_scores, gt_boxes, _num_classes):
   # (i.e., rpn.proposal_layer.ProposalLayer), or any other source
   all_rois = rpn_rois
   all_scores = rpn_scores
-
   # Include ground-truth boxes in the set of candidate rois
   if cfg.TRAIN.USE_GT:
     zeros = np.zeros((gt_boxes.shape[0], 1), dtype=gt_boxes.dtype)
@@ -100,10 +99,12 @@ def _sample_rois(all_rois, all_scores, gt_boxes, fg_rois_per_image, rois_per_ima
   """Generate a random sample of RoIs comprising foreground and background
   examples.
   """
+
   # overlaps: (rois x gt_boxes)
   overlaps = bbox_overlaps(
     np.ascontiguousarray(all_rois[:, 1:5], dtype=np.float),
     np.ascontiguousarray(gt_boxes[:, :4], dtype=np.float))
+
   gt_assignment = overlaps.argmax(axis=1)
   max_overlaps = overlaps.max(axis=1)
   labels = gt_boxes[gt_assignment, 4]
@@ -134,6 +135,9 @@ def _sample_rois(all_rois, all_scores, gt_boxes, fg_rois_per_image, rois_per_ima
     import pdb
     pdb.set_trace()
 
+  # print(fg_inds.shape)
+  # print(bg_inds.shape)
+  
   # The indices that we're selecting (both fg and bg)
   keep_inds = np.append(fg_inds, bg_inds)
   # Select sampled values from various arrays:
