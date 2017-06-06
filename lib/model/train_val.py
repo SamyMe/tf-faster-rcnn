@@ -310,6 +310,13 @@ class SolverWrapper(object):
 
       # Display training information
       if iter % (cfg.TRAIN.DISPLAY) == 0:
+
+        batch_total_loss /= cfg.TRAIN.DISPLAY
+        batch_rpn_loss_cls /= cfg.TRAIN.DISPLAY
+        batch_rpn_loss_box /= cfg.TRAIN.DISPLAY
+        batch_loss_cls /= cfg.TRAIN.DISPLAY
+        batch_loss_box /= cfg.TRAIN.DISPLAY
+
         print('iter: %d / %d, total loss: %.6f\n >>> rpn_loss_cls: %.6f\n '
               '>>> rpn_loss_box: %.6f\n >>> loss_cls: %.6f\n >>> loss_box: %.6f\n >>> lr: %f' % \
               (iter, max_iters, batch_total_loss, batch_rpn_loss_cls, batch_rpn_loss_box, batch_loss_cls, batch_loss_box, lr.eval()))
