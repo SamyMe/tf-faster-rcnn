@@ -27,14 +27,15 @@ __C.TRAIN = edict()
 # Could be : bbox, cls, fc or all
 __C.TRAIN.MODE = "all"
 
-__C.TRAIN.NB_EXAMPLE = 10
+__C.TRAIN.NB_EXAMPLE = 100
 
 # Initial learning rate
 # __C.TRAIN.LEARNING_RATE = 0.001
-__C.TRAIN.LEARNING_RATE = 0.0005
+__C.TRAIN.LEARNING_RATE = 0.0010
 
 # Momentum
 __C.TRAIN.MOMENTUM = 0.9
+__C.TRAIN.MOMENTUM = 0.999
 
 # Weight decay, for regularization
 __C.TRAIN.WEIGHT_DECAY = 0.0005
@@ -118,7 +119,7 @@ __C.TRAIN.BBOX_REG = True
 __C.TRAIN.BBOX_THRESH = 0.05
 
 # Iterations between snapshots
-__C.TRAIN.SNAPSHOT_ITERS = 100
+__C.TRAIN.SNAPSHOT_ITERS = 200
 
 # solver.prototxt specifies the snapshot path prefix, this adds an optional
 # infix to yield the path: <prefix>[_<infix>]_iters_XYZ.caffemodel
@@ -218,11 +219,11 @@ __C.TEST.PROPOSAL_METHOD = 'gt'
 __C.TEST.RPN_NMS_THRESH = 0.7
 ## Number of top scoring boxes to keep before apply NMS to RPN proposals
 # __C.TEST.RPN_PRE_NMS_TOP_N = 6000
-__C.TEST.RPN_PRE_NMS_TOP_N = 16000
+__C.TEST.RPN_PRE_NMS_TOP_N = 12000
 
 ## Number of top scoring boxes to keep after applying NMS to RPN proposals
 # __C.TEST.RPN_POST_NMS_TOP_N = 300
-__C.TEST.RPN_POST_NMS_TOP_N = 2000
+__C.TEST.RPN_POST_NMS_TOP_N = 4000
 
 # Proposal height and width both need to be greater than RPN_MIN_SIZE (at orig image scale)
 # __C.TEST.RPN_MIN_SIZE = 16
@@ -300,7 +301,7 @@ __C.POOLING_MODE = 'crop'
 __C.POOLING_SIZE = 7
 
 # Anchor scales for RPN
-__C.ANCHOR_SCALES = [2, 4, 8, 16, 32, 128]
+__C.ANCHOR_SCALES = [4, 8, 16, 32]
 
 # Anchor ratios for RPN
 __C.ANCHOR_RATIOS = [0.5,1,2]
