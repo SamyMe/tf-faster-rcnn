@@ -15,6 +15,9 @@ from model.config import cfg
 from model.bbox_transform import bbox_transform
 from utils.cython_bbox import bbox_overlaps
 import PIL
+import h5py
+
+db = h5py.File(cfg.DATA_FILE, 'r')
 
 def prepare_roidb(imdb):
   """Enrich the imdb's roidb by adding some derived quantities that
@@ -25,7 +28,8 @@ def prepare_roidb(imdb):
   """
   roidb = imdb.roidb
   if not (imdb.name.startswith('coco')):
-    sizes = [PIL.Image.open(imdb.image_path_at(i)).size
+    sizes = [PIL.Image.fromarray(np.array(
+            db[imdb.image_path_at(i)])).size
          for i in range(imdb.num_images)]
   for i in range(len(imdb.image_index)):
     roidb[i]['image'] = imdb.image_path_at(i)
