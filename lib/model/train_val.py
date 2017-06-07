@@ -222,11 +222,18 @@ class SolverWrapper(object):
     batch_rpn_loss_box = 0
     batch_loss_cls = 0
     batch_loss_box = 0
+    batch_time = time.time()
 
     timer = Timer()
     iter = last_snapshot_iter + 1
     last_summary_time = time.time()
+
+    if cfg.LOAD_TFMODEL :
+      saver = tf.train.Saver()
+      saver.restore(sess, cfg.TFMODEL)
+
     while iter < max_iters + 1:
+
       # Learning rate
       if iter == cfg.TRAIN.STEPSIZE + 1:
         # Add snapshot here before reducing the learning rate
@@ -275,13 +282,15 @@ class SolverWrapper(object):
         print('iter: %d / %d, total loss: %.6f\n >>> rpn_loss_cls: %.6f\n '
               '>>> rpn_loss_box: %.6f\n >>> loss_cls: %.6f\n >>> loss_box: %.6f\n >>> lr: %f' % \
               (iter, max_iters, batch_total_loss, batch_rpn_loss_cls, batch_rpn_loss_box, batch_loss_cls, batch_loss_box, lr.eval()))
-        print('speed: {:.3f}s / iter'.format(timer.average_time))
+        print('speed: {:.3f}s / iter  |  batch_time: {}'.format(timer.average_time, time.time()-batch_time))
 
         batch_total_loss = 0
         batch_rpn_loss_cls = 0
         batch_rpn_loss_box = 0
         batch_loss_cls = 0
         batch_loss_box = 0
+
+        batch_time = time.time()
 
       if iter % cfg.TRAIN.SNAPSHOT_ITERS == 0:
         last_snapshot_iter = iter
