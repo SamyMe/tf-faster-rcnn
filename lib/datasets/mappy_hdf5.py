@@ -32,16 +32,16 @@ class mappy(imdb):
 
         self.db = h5py.File(cfg.DATA_FILE, 'r')
 
-        self._classes = ('__background__',  # always index 0
-                          'aeroplane', 'bicycle', 'bird', 'boat',
-                          'bottle', 'bus', 'car', 'cat', 'chair',
-                          'cow', 'diningtable', 'dog', 'horse',
-                          'motorbike', 'person', 'pottedplant',
-                          'sheep', 'sofa', 'train', 'tvmonitor')
+        # self._classes = ('__background__',  # always index 0
+                          # 'aeroplane', 'bicycle', 'bird', 'boat',
+                          # 'bottle', 'bus', 'car', 'cat', 'chair',
+                          # 'cow', 'diningtable', 'dog', 'horse',
+                          # 'motorbike', 'person', 'pottedplant',
+                          # 'sheep', 'sofa', 'train', 'tvmonitor')
  
-        # self._classes = ('__background__',
-                        # 'faces', # => 15
-                        # 'lps')   # => 7
+        self._classes = ('__background__',
+                        'faces',
+                        'lps')
 
         self._class_to_ind = dict(zip(self.classes, xrange(self.num_classes)))
         self._image_ext = ['.jpg', '.png']
@@ -57,17 +57,22 @@ class mappy(imdb):
                        'use_salt' : True,
                        'top_k'    : 2000}
 
-        assert os.path.exists(self._devkit_path), \
-                'Devkit path does not exist: {}'.format(self._devkit_path)
-        assert os.path.exists(self._data_path), \
-                'Path does not exist: {}'.format(self._data_path)
-
+        # assert os.path.exists(self._devkit_path), \
+                # 'Devkit path does not exist: {}'.format(self._devkit_path)
+        # assert os.path.exists(self._data_path), \
+                # 'Path does not exist: {}'.format(self._data_path)
 
     def image_path_at(self, i):
         """
-        Return the absolute path to image i in the image sequence.
+        Return hdf5 key
         """
-        return self.image_path_from_index(self._image_index[i])
+        return "Images/"+self.img_keys[i]
+
+    def _get_widths(self):
+        return [PIL.Image.fromarray(
+                np.array(self.db[self.image_path_at(i)])).size[0]
+              for i in range(self.num_images)]
+ 
 
     def image_path_from_index(self, index):
         """
@@ -80,21 +85,24 @@ class mappy(imdb):
                 break
         assert os.path.exists(image_path), \
                 'Path does not exist: {}'.format(image_path)
+        print image_path
 	return image_path
 
     def _load_image_set_index(self):
         """
         Load the indexes listed in this dataset's image set file.
         """
-        # Example path to image set file:
-        # self._data_path + /ImageSets/val.txt
-        image_set_file = os.path.join(self._data_path, 'ImageSets', 
-                                      self._image_set + '.txt')
-        assert os.path.exists(image_set_file), \
-                'Path does not exist: {}'.format(image_set_file)
-        with open(image_set_file) as f:
-            image_index = [x.strip() for x in f.readlines()]
+
+        if self._image_set == "train" :
+            image_index = list(self.db['y/'].keys())[:cfg.TRAIN.NB_EXAMPLE]
+
+        elif self._image_set == "test" :
+            image_index = list(self.db['y/'].keys())[cfg.TRAIN.NB_EXAMPLE: cfg.TRAIN.NB_EXAMPLE + cfg.TEST.NB_EXAMPLE]
+
+        image_index = list(self.db['y/'].keys())[:cfg.TRAIN.NB_EXAMPLE]
+
         return image_index
+
 
     def gt_roidb(self, cache=False):
         """
@@ -206,14 +214,10 @@ class mappy(imdb):
 
     def _load_mappy_annotation(self, index):
         """
-        Load image and bounding boxes info from txt files of INRIAPerson.
+        Load bbox from hdf5
         """
-        filename = os.path.join(self._data_path, 'Annotations', index + '.txt')
-        # print 'Loading: {}'.format(filename)
-	with open(filename) as f:
-            data = f.read()
-	import re
-        objs = re.findall('\(\d+(?:\.\d+)?, \d+(?:\.\d+)?, \d+(?:\.\d+)?, \d+(?:\.\d+)?, \d\)', data)
+	objs = self.db['y/'+index] 
+
         num_objs = len(objs)
 
         boxes = np.zeros((num_objs, 4), dtype=np.uint16)
@@ -221,27 +225,20 @@ class mappy(imdb):
         overlaps = np.zeros((num_objs, self.num_classes), dtype=np.float32)
         
         # Load object bounding boxes into a data frame.
-        for ix, obj in enumerate(objs):
+        for ix, coor in enumerate(objs):
             # Make pixel indexes 0-based
-            coor = re.findall('\d+(?:\.\d+)?', obj)
-            x1 = float(coor[0])
-            y1 = float(coor[1])
-            w = float(coor[2])
-            h = float(coor[3])
+            y1 = float(coor[0])
+            x1 = float(coor[1])
+            h = float(coor[2])
+            w = float(coor[3])
             cls = int(coor[4]) 
-
-            x2 = x1+w 
-            y2 = y1+h 
+ 
+            y2 = y1+h
+            x2 = x1+w
             
-            if cls == 1 :
-                cls = 15
-            elif cls == 2 :
-                cls = 7
-
             boxes[ix, :] = [x1, y1, x2, y2]
             gt_classes[ix] = cls
             overlaps[ix, cls] = 1.0
-
 
         overlaps = scipy.sparse.csr_matrix(overlaps)
 
@@ -303,6 +300,6 @@ class mappy(imdb):
             self.config['cleanup'] = True
 
 if __name__ == '__main__':
-    d = datasets.inria('train', '')
+    d = mappy('train', '')
     res = d.roidb
     from IPython import embed; embed()

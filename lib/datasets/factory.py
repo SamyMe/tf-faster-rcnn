@@ -18,7 +18,7 @@ from datasets.mappy import mappy
 import numpy as np
 
 # Set up mappy_<split>
-mappy_devkit_path = '/panos/mappy'
+mappy_devkit_path = '/home/blur/Documents/data/_output_imdb/'
 for split in ['train', 'test']:
     name = '{}_{}'.format('mappy', split)
     __sets[name] = (lambda split=split: mappy(split, mappy_devkit_path))

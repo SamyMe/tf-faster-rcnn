@@ -62,8 +62,8 @@ def _get_image_blob(roidb, scale_inds):
   processed_ims = []
   im_scales = []
   for i in range(num_images):
-    # im = cv2.imread(roidb[i]['image'])
-    im = np.array(DB[roidb[i]['image']])
+    im = cv2.imread(roidb[i]['image'])
+    # im = np.array(DB[roidb[i]['image']])
     if roidb[i]['flipped']:
       im = im[:, ::-1, :]
     target_size = cfg.TRAIN.SCALES[scale_inds[i]]
