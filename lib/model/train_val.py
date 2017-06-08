@@ -121,8 +121,24 @@ class SolverWrapper(object):
       momentum = cfg.TRAIN.MOMENTUM
       self.optimizer = tf.train.MomentumOptimizer(lr, momentum)
 
+      # from pprint import pprint
+      # pprint([v.name for v in tf.trainable_variables()[-8:]])
+
+      # [u'vgg_16/fc6/weights:0',
+      # u'vgg_16/fc6/biases:0',
+      # u'vgg_16/fc7/weights:0',
+      # u'vgg_16/fc7/biases:0',
+      # u'vgg_16/cls_score/weights:0',
+      # u'vgg_16/cls_score/biases:0',
+      # u'vgg_16/bbox_pred/weights:0',
+      # u'vgg_16/bbox_pred/biases:0']
+
+      only_bbox = tf.trainable_variables()[-2:]
+      only_fc = tf.trainable_variables()[-8:-4]
+
       # Compute the gradients wrt the loss
-      gvs = self.optimizer.compute_gradients(loss)
+      # gvs = self.optimizer.compute_gradients(loss)
+      gvs = self.optimizer.compute_gradients(loss, var_list=only_bbox+only_fc)
       # Double the gradient of the bias if set
       if cfg.TRAIN.DOUBLE_BIAS:
         final_gvs = []
@@ -180,7 +196,9 @@ class SolverWrapper(object):
       # Need to fix the variables before loading, so that the RGB weights are changed to BGR
       # For VGG16 it also changes the convolutional weights fc6 and fc7 to
       # fully connected weights
-      self.net.fix_variables(sess, self.pretrained_model)
+
+      print('No need for FIX')
+      # self.net.fix_variables(sess, self.pretrained_model)
       print('Fixed.')
       sess.run(tf.assign(lr, cfg.TRAIN.LEARNING_RATE))
       last_snapshot_iter = 0
@@ -228,6 +246,7 @@ class SolverWrapper(object):
     iter = last_snapshot_iter + 1
     last_summary_time = time.time()
 
+    # load a pretrained model
     if cfg.LOAD_TFMODEL :
       saver = tf.train.Saver()
       saver.restore(sess, cfg.TFMODEL)
