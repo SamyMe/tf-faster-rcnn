@@ -137,8 +137,10 @@ class SolverWrapper(object):
       only_fc = tf.trainable_variables()[-8:-4]
 
       # Compute the gradients wrt the loss
-      # gvs = self.optimizer.compute_gradients(loss)
-      gvs = self.optimizer.compute_gradients(loss, var_list=only_bbox+only_fc)
+      
+      gvs = self.optimizer.compute_gradients(loss)
+      # gvs = self.optimizer.compute_gradients(loss, var_list=only_bbox+only_fc)
+
       # Double the gradient of the bias if set
       if cfg.TRAIN.DOUBLE_BIAS:
         final_gvs = []
