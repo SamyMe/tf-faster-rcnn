@@ -29,10 +29,11 @@ import numpy as np
 import os, cv2
 import argparse
 import pickle
+import re
 
 from nets.vgg16 import vgg16
 from nets.resnet_v1 import resnetv1
-
+from eval import annotation, recall_iou
 
 
 CLASSES = ('__background__',
@@ -148,15 +149,31 @@ if __name__ == '__main__':
     # One pass
     if im_file != None:
         print('Forward pass for {}'.format(im_file))
-        result = forward(sess, net, im_file)
+        det = forward(sess, net, im_file)
+
+        # Evaluation
+        im_id = re.findall('\d{13}', im_file)[0]
+        print(im_id)
+        gt = annotation(im_id)
+        result = recall_iou(det, gt)
 
     # Pass over foldeO
     if dir_name != None:
+        complete_recall = 0
         i = 0
-        for im_name in os.listdir(dir_name)[3000:]:
+        for im_name in os.listdir(dir_name):
             i += 1
             print('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
             print('Forward pass for {}{}'.format(dir_name, im_name))
             im_file = os.path.join(dir_name, im_name)
-            result = forward(sess, net, im_file)
+            det = forward(sess, net, im_file)
+
+            # Evaluation
+            im_id = re.findall('\d{13}', im_file)[0]
+            print(im_id)
+            gt = annotation(im_id)
+            result = recall_iou(det, gt)
             print(result)
+            complete_recall += result[0]
+
+        print("complete recall for {} images = {}".format(len(os.listdir(dir_name)), complete_recall/len(os.listdir(dir_name))))
