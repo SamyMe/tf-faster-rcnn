@@ -17,7 +17,6 @@ import scipy.io as sio
 import utils.cython_bbox
 import cPickle
 import subprocess
-import h5py
 import PIL
 from model.config import cfg
 
@@ -29,8 +28,6 @@ class mappy(imdb):
         self._image_set = image_set
         self._devkit_path = devkit_path
         self._data_path = os.path.join(self._devkit_path, 'data')
-
-        self.db = h5py.File(cfg.DATA_FILE, 'r')
 
         self._classes = ('__background__',  # always index 0
                           'aeroplane', 'bicycle', 'bird', 'boat',
@@ -48,9 +45,6 @@ class mappy(imdb):
         self._image_index = self._load_image_set_index()
         # Default to roidb handler
         self._roidb_handler = self.selective_search_roidb
-
-        # HDF5 database
-        self.img_keys = list(self.db['y'].keys())
 
         # Specific config options
         self.config = {'cleanup'  : True,
