@@ -393,7 +393,7 @@ class Network(object):
         print("===============================")
     return rpn_loss_cls, rpn_loss_box, loss_cls, loss_box, loss
 
-  def train_step_with_summary(self, sess, blobs, train_op):
+  def train_step_with_summary(self, sess, blobs, train_op, print_debug=False):
     feed_dict = {self._image: blobs['data'], self._im_info: blobs['im_info'],
                  self._gt_boxes: blobs['gt_boxes']}
     rpn_loss_cls, rpn_loss_box, loss_cls, loss_box, loss, summary,_  = sess.run([self._losses["rpn_cross_entropy"],
@@ -404,10 +404,11 @@ class Network(object):
                                                                                  self._summary_op,
                                                                                  train_op] + [dmode for dmode in self._variables_to_check.values()],
                                                                                 feed_dict=feed_dict)
-    print("===============================")
-    print("Debug Mode")
-    print(str(loss_box))
-    print("===============================")
+    if print_debug:
+	    print("===============================")
+	    print("Debug Mode")
+	    print(str(loss_box))
+	    print("===============================")
     return rpn_loss_cls, rpn_loss_box, loss_cls, loss_box, loss, summary
 
   def train_step_no_return(self, sess, blobs, train_op):
