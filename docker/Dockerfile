@@ -7,7 +7,7 @@ FROM nvidia/cuda:8.0-cudnn5-devel
 WORKDIR /root
 
 # Default keyboard conf
-COPY ./keyboard /etc/default/keyboard
+COPY ./docker/keyboard /etc/default/keyboard
 
 # Get required packages
 RUN apt-get update && \
@@ -38,6 +38,7 @@ RUN pip install image \
                 shapely \
                 h5py \
                 tensorflow-gpu
+
 # Update numpy
 RUN pip install -U numpy
 
@@ -48,8 +49,12 @@ RUN apt-get install libgeos-dev -y
 
 # Clone project
 RUN mkdir /ai
-WORKDIR /ai
-RUN git clone https://github.com/SamyMe/tf-faster-rcnn
+WORKDIR /ai/tf-faster-rcnn
+# RUN git clone https://github.com/SamyMe/tf-faster-rcnn
+ADD ./data  ./data
+ADD ./experiments ./experiments
+ADD ./lib  ./lib
+ADD ./tools ./tools
 
 # Add CUDA to the path
 ENV LD_LIBRARY_PATH $LD_LIBRARY_PATH:/usr/local/cuda/lib64
@@ -59,22 +64,14 @@ RUN ldconfig
 
 # Build the Cython modules
 WORKDIR /ai/tf-faster-rcnn/lib
+RUN ls .
 RUN make clean
 RUN make 
 
-# Copy 1388 Images and config.py
+# Copy config.py
 WORKDIR /ai/tf-faster-rcnn
-RUN mkdir -p /home/blur/Documents/data/_output_imdb
-COPY ./data/nk/data  /home/blur/Documents/data/_output_imdb/data
-COPY  config.py lib/model/
+COPY  ./docker/config.py lib/model/
 
-# Download vgg16 pretrained on imagenet
-RUN mkdir -p data/imagenet_weights
-WORKDIR data/imagenet_weights
-RUN wget -v http://download.tensorflow.org/models/vgg_16_2016_08_28.tar.gz
-RUN tar -xzvf vgg_16_2016_08_28.tar.gz
-RUN mv vgg_16.ckpt vgg16.ckpt
-
-WORKDIR /ai/tf-faster-rcnn
-# RUN python tools/forward.py --img data/demo/000456.jpg 
-RUN python tools/trainval_net.py --imdb mappy_train --imdbval mappy_test --iters 15 --net vgg16 --weight data/imagenet_weights/vgg16.ckpt
+# To train :
+# nvidia-docker run -it -v /path/on/disck/:/data faster-rcnn bash
+# python tools/trainval_net.py --imdb mappy_train --imdbval mappy_test --iters 15 --net vgg16 --weight /data/voc_2007_trainval+voc_2012_trainval/vgg16_faster_rcnn_iter_110000.ckpt

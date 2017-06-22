@@ -13,12 +13,13 @@ from __future__ import print_function
 __sets = {}
 # from datasets.pascal_voc import pascal_voc
 # from datasets.coco import coco
+from model.config import cfg
 from datasets.mappy import mappy
 
 import numpy as np
 
 # Set up mappy_<split>
-mappy_devkit_path = '/data/training_1388/'
+mappy_devkit_path = cfg.DATA_FACTORY
 for split in ['train', 'test']:
     name = '{}_{}'.format('mappy', split)
     __sets[name] = (lambda split=split: mappy(split, mappy_devkit_path))
