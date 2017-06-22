@@ -266,10 +266,15 @@ class SolverWrapper(object):
       blobs = self.data_layer.forward()
 
       now = time.time()
+
+      print_debug = False
+      if iter % (cfg.TRAIN.DISPLAY) == 0 and cfg.TRAIN.DISPLAY_INFO == 1:
+          print_debug = True
+
       if now - last_summary_time > cfg.TRAIN.SUMMARY_INTERVAL:
         # Compute the graph with summary
         rpn_loss_cls, rpn_loss_box, loss_cls, loss_box, total_loss, summary = \
-          self.net.train_step_with_summary(sess, blobs, train_op)
+          self.net.train_step_with_summary(sess, blobs, train_op, print_debug=print_debug)
         self.writer.add_summary(summary, float(iter))
         # Also check the summary on the validation set
         blobs_val = self.data_layer_val.forward()
@@ -278,9 +283,6 @@ class SolverWrapper(object):
         last_summary_time = now
       else:
         # Compute the graph without summary
-        print_debug = False
-        if iter % (cfg.TRAIN.DISPLAY) == 0 and cfg.TRAIN.DISPLAY_INFO == 1:
-            print_debug = True
         rpn_loss_cls, rpn_loss_box, loss_cls, loss_box, total_loss = \
               self.net.train_step(sess, blobs, train_op, print_debug=print_debug)
       timer.toc()

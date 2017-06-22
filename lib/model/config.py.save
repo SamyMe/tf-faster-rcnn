@@ -14,13 +14,13 @@ __C = edict()
 cfg = __C
 
 # hdf5 data path
-__C.DATA_FILE = '/home/blur/Documents/data/train_1400_faster_init.hdf5' 
-__C.DATA_IMDB = '/home/blur/Documents/data/_output_imdb/data/'
+__C.DATA_FILE = 'train_1400_faster_init.hdf5' 
+__C.DATA_IMDB = '/data/training_1388/data/'
 
 # Load a specific tfmodel
 __C.LOAD_TFMODEL = True 
 # Path to the specific tfmodel
-__C.TFMODEL = '/home/blur/Documents/git/tf-faster-rcnn/output/vgg16/voc_2007_trainval/vgg16_faster_rcnn_iter_70000.ckpt'
+__C.TFMODEL = '/data/voc_2007_trainval+voc_2012_trainval/vgg16_faster_rcnn_iter_110000.ckpt'
 
 #
 # Training options
@@ -35,7 +35,6 @@ __C.TRAIN.MODE = 'all'
 # "cls" : layers['cross_entropy'],
 # "fc" : layers['cross_entropy'] + layers['loss_box'],
 # "all" : layers['total_loss'],
-
 
 __C.TRAIN.DISPLAY_INFO = 0
 
@@ -56,7 +55,7 @@ __C.TRAIN.GAMMA = 0.1
 __C.TRAIN.STEPSIZE = 5000
 
 # Iteration intervals for showing the loss during training, on command line interface
-__C.TRAIN.DISPLAY = 500
+__C.TRAIN.DISPLAY = 5
 
 # Whether to double the learning rate for bias
 __C.TRAIN.DOUBLE_BIAS = True
@@ -121,7 +120,7 @@ __C.TRAIN.BBOX_THRESH = 0.5
 __C.TRAIN.BBOX_THRESH = 0.05
 
 # Iterations between snapshots
-__C.TRAIN.SNAPSHOT_ITERS = 5000
+__C.TRAIN.SNAPSHOT_ITERS = 5
 
 # solver.prototxt specifies the snapshot path prefix, this adds an optional
 # infix to yield the path: <prefix>[_<infix>]_iters_XYZ.caffemodel
@@ -322,6 +321,8 @@ def get_output_dir(imdb, weights_filename):
   outdir = osp.join(outdir, weights_filename)
   if not os.path.exists(outdir):
     os.makedirs(outdir)
+
+  return '/data/output'
   return outdir
 
 
