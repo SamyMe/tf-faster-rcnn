@@ -10,3 +10,6 @@ lib/pycocotools/_mask.so
 
 *.swp
 *.swo
+
+# ignore config file
+lib/model/config.py
