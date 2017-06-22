@@ -44,11 +44,11 @@ def recall_iou(det, gt, threshold=0.01):
     return recall, iou
 
 
-def annotation(im_id):
+def annotation(im_id, annotation_dir):
     # Load Annotation from .txt
     # Returns gt
     
-    filename = os.path.join(cfg.DATA_IMDB, 'Annotations', im_id + '.txt')
+    filename = os.path.join(annotation_dir, im_id + '.txt')
     # print 'Loading: {}'.format(filename)
     with open(filename) as f:
         data = f.read()
