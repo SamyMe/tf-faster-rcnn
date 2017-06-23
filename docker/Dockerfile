@@ -50,7 +50,7 @@ RUN apt-get install libgeos-dev -y
 # Clone project
 RUN mkdir /ai
 WORKDIR /ai/tf-faster-rcnn
-# RUN git clone https://github.com/SamyMe/tf-faster-rcnn
+# Copying script files
 ADD ./data  ./data
 ADD ./experiments ./experiments
 ADD ./lib  ./lib
@@ -64,7 +64,6 @@ RUN ldconfig
 
 # Build the Cython modules
 WORKDIR /ai/tf-faster-rcnn/lib
-RUN ls .
 RUN make clean
 RUN make 
 
@@ -72,6 +71,7 @@ RUN make
 WORKDIR /ai/tf-faster-rcnn
 COPY  ./docker/config.py lib/model/
 
-# To train :
+# To run the container with bash prompt:
 # nvidia-docker run -it -v /path/on/disck/:/data faster-rcnn bash
+# To launch train:
 # python tools/trainval_net.py --imdb mappy_train --imdbval mappy_test --iters 15 --net vgg16 --weight /data/voc_2007_trainval+voc_2012_trainval/vgg16_faster_rcnn_iter_110000.ckpt
