@@ -15,6 +15,7 @@ cfg = __C
 
 # hdf5 data path
 __C.DATA_FILE = 'train_1400_faster_init.hdf5' 
+__C.DATA_FACTORY = '/data/training_1338/'
 __C.DATA_IMDB = '/data/training_1388/data/'
 
 # Load a specific tfmodel

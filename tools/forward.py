@@ -88,6 +88,7 @@ def parse_args():
     parser.add_argument('--annotation_dir', dest='anno_dir', default=None, help='Directory containing examples')
     parser.add_argument('--img', dest='img_path', default=None, help='Image to pass forward examples')
     parser.add_argument('--model', dest='tfmodel', default=None, help='Trained model to restore')
+    parser.add_argument('--min_recall', dest='min_recall', default=None, help='Minimum recall expected')
 
     args = parser.parse_args()
 
@@ -103,6 +104,10 @@ if __name__ == '__main__':
     anno_dir = args.anno_dir
     im_file = args.img_path
     tfmodel = args.tfmodel
+    min_recall = args.min_recall
+
+    if min_recall == None:
+        min_recall = 0.8
 
     # Original vgg16 model
     # tfmodel = 'output/vgg16/voc_2007_trainval+voc_2012_trainval/vgg16_faster_rcnn_iter_110000.ckpt'
@@ -171,5 +176,5 @@ if __name__ == '__main__':
 
 	complete_recall /= len(os.listdir(img_dir))
         print("Complete recall for {} images = {}".format(len(os.listdir(img_dir)), complete_recall))
-	if complete_recall < 0.8:
+	if complete_recall < min_recall:
 		raise ValueError('The recall is not good enough !\nModel doesn\'t seem to have trained well.')
