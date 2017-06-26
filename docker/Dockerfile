@@ -51,8 +51,6 @@ RUN apt-get install libgeos-dev -y
 RUN mkdir /ai
 WORKDIR /ai/tf-faster-rcnn
 # Copying script files
-ADD ./data  ./data
-ADD ./experiments ./experiments
 ADD ./lib  ./lib
 ADD ./tools ./tools
 
