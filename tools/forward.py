@@ -43,12 +43,7 @@ CLASSES = ('__background__',
            'motorbike', 'face', 'pottedplant',
            'sheep', 'sofa', 'train', 'tvmonitor')
 
-# CLASSES = ('__background__',
-        # 'faces', 
-        # 'lps')
-
 NETS = {'vgg16': ('vgg16_faster_rcnn_iter_70000.ckpt',),'res101': ('res101_faster_rcnn_iter_110000.ckpt',)}
-DATASETS= {'pascal_voc': ('voc_2007_trainval',),'pascal_voc_0712': ('voc_2007_trainval+voc_2012_trainval',)}
 
 
 def forward(sess, net, im_file, CONF_THRESH=0.8, NMS_THRESH=0.7):
@@ -79,16 +74,21 @@ def forward(sess, net, im_file, CONF_THRESH=0.8, NMS_THRESH=0.7):
 
     return results, timer.total_time
 
+def iterate_over_query(query):
+    # Yields a gnerator for images queried from dataset
+    pass
+
+def push_detection(det)
+    # Push detections through the API 
+    pass
+
+
 def parse_args():
     """Parse input arguments."""
     parser = argparse.ArgumentParser(description='Tensorflow Faster R-CNN demo')
-    parser.add_argument('--net', dest='demo_net', help='Network to use [vgg16 res101]',
+    parser.add_argument('--net', dest='net_name', help='Network to use [vgg16 res101]',
                         choices=NETS.keys(), default='vgg16')
-    parser.add_argument('--img_dir', dest='img_dir', default=None, help='Directory containing examples')
-    parser.add_argument('--annotation_dir', dest='anno_dir', default=None, help='Directory containing examples')
-    parser.add_argument('--img', dest='img_path', default=None, help='Image to pass forward examples')
     parser.add_argument('--model', dest='tfmodel', default=None, help='Trained model to restore')
-    parser.add_argument('--min_recall', dest='min_recall', default=None, help='Minimum recall expected')
 
     args = parser.parse_args()
 
@@ -99,22 +99,11 @@ if __name__ == '__main__':
     args = parse_args()
 
     # model path
-    demonet = args.demo_net
-    img_dir = args.img_dir
-    anno_dir = args.anno_dir
-    im_file = args.img_path
+    net_name = args.net_name
     tfmodel = args.tfmodel
-    min_recall = args.min_recall
 
     if min_recall == None:
         min_recall = 0.8
-
-    # Original vgg16 model
-    # tfmodel = 'output/vgg16/voc_2007_trainval+voc_2012_trainval/vgg16_faster_rcnn_iter_110000.ckpt'
-    # Last layer fine tuned
-    # tfmodel = '/hoLast layer fe/blur/Documents/git/tf-faster-rcnn/output/default/train/default/res101_faster_rcnn_iter_80000.ckpt'
-    # Whole model fine tuned
-    # tfmodel = '/home/blur/Documents/git/tf-faster-rcnn/output/default/train/default/vgg16_allnet_train_iter_100000.ckpt'
 
     if not os.path.isfile(tfmodel + '.meta'):
         raise IOError(('{:s} not found.\nDid you download the proper networks from '
@@ -127,9 +116,9 @@ if __name__ == '__main__':
     # init session
     sess = tf.Session(config=tfconfig)
     # load network
-    if demonet == 'vgg16':
+    if net_name == 'vgg16':
         net = vgg16(batch_size=1)
-    elif demonet == 'res101':
+    elif net_name == 'res101':
         net = resnetv1(batch_size=1, num_layers=101)
     else:
         raise NotImplementedError
@@ -138,43 +127,20 @@ if __name__ == '__main__':
     net.create_architecture(sess, "TEST", 21,
                           tag='default', anchor_scales=[8, 16, 32])
 
-    # net.create_architecture(sess, "TEST", 3,
-                          # tag='default', anchor_scales=[2,4,8,16,32])
-
     saver = tf.train.Saver()
     saver.restore(sess, tfmodel)
 
     print('Loaded network {:s}'.format(tfmodel))
 
-    # One pass
-    if im_file != None:
-        print('Forward pass for {}'.format(im_file))
-        det = forward(sess, net, im_file)
-
-        # Evaluation
-        im_id = re.findall('\d{13}', im_file)[0]
-        print(im_id)
-        gt = annotation(im_id, anno_dir)
-        result = recall_iou(det, gt)
-
-    # Pass over foldeO
-    if img_dir != None:
-        complete_recall = 0
+    # Get images to annotate
+    query = None
+    image_set = iterate_over_query(query)
+    if image_set != None:
         i = 0
-        for im_name in os.listdir(img_dir):
+        for im_file in image_set:
             i += 1
-            # print('Forward pass for {}{}'.format(img_dir, im_name))
-            im_file = os.path.join(img_dir, im_name)
             det, det_time = forward(sess, net, im_file)
+            print("n°{} : {}  |  {} sc ".format(i, im_id, det_time))
 
-            # Evaluation
-            im_id = re.findall('\d{13}', im_file)[0]
-            gt = annotation(im_id, anno_dir)
-            result = recall_iou(det, gt)
-            print("{}  |  {} sc  |  {}".format(im_id, det_time, result))
-            complete_recall += result[0]
-
-	complete_recall /= len(os.listdir(img_dir))
-        print("Complete recall for {} images = {}".format(len(os.listdir(img_dir)), complete_recall))
-	if complete_recall < min_recall:
-		raise ValueError('The recall is not good enough !\nModel doesn\'t seem to have trained well.')
+            # Push to the API
+            push_detection(det)
