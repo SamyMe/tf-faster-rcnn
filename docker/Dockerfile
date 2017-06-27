@@ -48,7 +48,7 @@ RUN apt-get install cuda nvidia-cuda-toolkit -y
 RUN apt-get install libgeos-dev -y
 
 # Clone project
-RUN mkdir /ai
+RUN mkdir -p /ai/logs
 WORKDIR /ai/tf-faster-rcnn
 # Copying script files
 ADD ./lib  ./lib

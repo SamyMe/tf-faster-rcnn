@@ -30,6 +30,7 @@ import os, cv2
 import argparse
 import pickle
 import re
+from datetime import datetime
 
 from nets.vgg16 import vgg16
 from nets.resnet_v1 import resnetv1
@@ -109,6 +110,10 @@ if __name__ == '__main__':
     if min_recall == None:
         min_recall = 0.8
 
+    # Logfile
+    logfile = '/ai/logs/'+datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
+    print(logfile)
+
     # Original vgg16 model
     # tfmodel = 'output/vgg16/voc_2007_trainval+voc_2012_trainval/vgg16_faster_rcnn_iter_110000.ckpt'
     # Last layer fine tuned
@@ -172,9 +177,16 @@ if __name__ == '__main__':
             gt = annotation(im_id, anno_dir)
             result = recall_iou(det, gt)
             print("{}  |  {} sc  |  {}".format(im_id, det_time, result))
+
+            with open(logfile, 'a') as f:
+                f.write("{}  |  {} sc  |  {}\n".format(im_id, det_time, result))
+
             complete_recall += result[0]
 
 	complete_recall /= len(os.listdir(img_dir))
         print("Complete recall for {} images = {}".format(len(os.listdir(img_dir)), complete_recall))
+        with open(logfile, 'a') as f:
+            f.write("Complete recall for {} images = {}\n".format(len(os.listdir(img_dir)), complete_recall))
+
 	if complete_recall < min_recall:
 		raise ValueError('The recall is not good enough !\nModel doesn\'t seem to have trained well.')
