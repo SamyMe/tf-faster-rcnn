@@ -1,4 +1,4 @@
-from lib.eval import annotation, recall_iou
+from tools.eval import annotation, recall_iou
 
 def test_annotation():
 

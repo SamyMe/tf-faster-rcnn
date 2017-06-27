@@ -80,14 +80,3 @@ def annotation(im_id, annotation_dir):
 
     return gt
 
-
-if __name__ == "__main__":
-
-    gt = [(1,1,3,3,  7), (1,5,2,6,  7), (5,1,7,3,  7)]
-    det = {'face': [[2,1,3,4], [5,1,7,3]]}
-
-    result = recall_iou(det, gt)
-    print(result)
-    # (0.6666666666666666, [0.5, 1.0])
-
-    # print(annotation('2000010000005', annotation_dir=))

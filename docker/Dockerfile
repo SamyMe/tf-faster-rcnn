@@ -23,7 +23,6 @@ RUN apt-get update && \
                   cmake \
                   wget \
                   cython \
-                  git \
                   mlocate \
                   -y
                   
@@ -37,6 +36,7 @@ RUN pip install image \
                 easydict \
                 shapely \
                 h5py \
+                pytest \
                 tensorflow-gpu
 
 # Update numpy
@@ -53,6 +53,7 @@ WORKDIR /ai/tf-faster-rcnn
 # Copying script files
 ADD ./lib  ./lib
 ADD ./tools ./tools
+ADD ./tests ./tests
 
 # Add CUDA to the path
 ENV LD_LIBRARY_PATH $LD_LIBRARY_PATH:/usr/local/cuda/lib64
