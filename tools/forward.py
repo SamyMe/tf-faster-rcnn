@@ -30,10 +30,12 @@ import os, cv2
 import argparse
 import pickle
 import re
+import urllib
 
 from nets.vgg16 import vgg16
 from nets.resnet_v1 import resnetv1
 from eval import annotation, recall_iou
+import numpy
 
 
 CLASSES = ('__background__',
@@ -46,20 +48,17 @@ CLASSES = ('__background__',
 NETS = {'vgg16': ('vgg16_faster_rcnn_iter_70000.ckpt',),'res101': ('res101_faster_rcnn_iter_110000.ckpt',)}
 
 
-def forward(sess, net, im_file, CONF_THRESH=0.8, NMS_THRESH=0.7):
+def forward(sess, net, img, CONF_THRESH=0.8, NMS_THRESH=0.7):
     """ Detect object classes in an image using pre-computed object proposals.
 	Returns: Result, time"""
 
     results = {'face': [],
                'lp': []}
 
-    # Load the demo image
-    im = cv2.imread(im_file)
-
     # Detect all object classes and regress object bounds
     timer = Timer()
     timer.tic()
-    scores, boxes = im_detect(sess, net, im)
+    scores, boxes = im_detect(sess, net, img)
     timer.toc()
 
     for cls in ('face', 'lp') :# enumerate(CLASSES[1:]):
@@ -74,13 +73,33 @@ def forward(sess, net, im_file, CONF_THRESH=0.8, NMS_THRESH=0.7):
 
     return results, timer.total_time
 
-def iterate_over_query(query):
-    # Yields a gnerator for images queried from dataset
-    pass
 
-def push_detection(det)
+def iterate_over_query(query):
+    for im_id in query:
+        pano_hexa = urllib.urlopen(
+                "http://{}:{}@{}/bo/images/fullRaw/tile/{}".format(
+                    cfg.BO.id, cfg.BO.password, 
+		    cfg.BO.address_port,
+		    construct_path(im_id))
+                ).read()
+
+        pano = cv2.imdecode(numpy.fromstring(pano_hexa, numpy.uint8), cv2.CV_LOAD_IMAGE_COLOR)
+        yield im_id, pano 
+
+
+def push_detection(det):
     # Push detections through the API 
-    pass
+    for key, val in det.items():
+        print(key, len(val))
+
+
+def construct_path(id_val):
+       """Constructing path to a pano from its _id
+       """
+       id_val = str(id_val)
+       path = id_val[:3] + "/" + id_val[3:6] + "/" + id_val[6:9] + "/"
+       path += id_val
+       return path
 
 
 def parse_args():
@@ -101,6 +120,8 @@ if __name__ == '__main__':
     # model path
     net_name = args.net_name
     tfmodel = args.tfmodel
+
+    min_recall = 0.5
 
     if min_recall == None:
         min_recall = 0.8
@@ -133,14 +154,14 @@ if __name__ == '__main__':
     print('Loaded network {:s}'.format(tfmodel))
 
     # Get images to annotate
-    query = None
+    query = [1000042997570, 2000010009999]
     image_set = iterate_over_query(query)
     if image_set != None:
         i = 0
-        for im_file in image_set:
+        for im_id, img in image_set:
             i += 1
-            det, det_time = forward(sess, net, im_file)
-            print("n°{} : {}  |  {} sc ".format(i, im_id, det_time))
+            det, det_time = forward(sess, net, img)
+            print("n {} : {}  |  {} sc ".format(i, im_id, det_time))
 
             # Push to the API
             push_detection(det)

@@ -23,6 +23,13 @@ __C.LOAD_TFMODEL = True
 # Path to the specific tfmodel
 __C.TFMODEL = '/data/voc_2007_trainval+voc_2012_trainval/vgg16_faster_rcnn_iter_110000.ckpt'
 
+
+# connect bo
+__C.BO = edict()
+__C.BO.id = "ia"
+__C.BO.password = "mappyIaBoss"
+__C.BO.address_port = "10.92.70.34:9090"
+
 #
 # Training options
 #
